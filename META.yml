@@ -27,11 +27,12 @@ no_index:
 provides:
   Regexp::VerbalExpressions:
     file: lib/Regexp/VerbalExpressions.pm
-    version: 0.01
+    version: 0.02
 requires:
+  parent: 0
   perl: 5.008005
 resources:
   bugtracker: https://github.com/VerbalExpressions/PerlVerbalExpressions/issues
   homepage: https://github.com/VerbalExpressions/PerlVerbalExpressions
   repository: git://github.com/VerbalExpressions/PerlVerbalExpressions.git
-version: 0.01
+version: 0.02

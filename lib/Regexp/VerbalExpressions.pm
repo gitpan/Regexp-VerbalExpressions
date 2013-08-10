@@ -5,7 +5,7 @@ use warnings;
 use parent qw/Exporter/;
 use overload fallback => 1, q{""} => \&source, 'qr' => \&regex;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 our @EXPORT = qw/verex/;
 
@@ -14,10 +14,12 @@ sub new {
     return bless {
         s         => '',
         modifiers => {
-            i => '',
-            g => '',
-            m => '',
+            i => 0,
+            m => 0,
+            s => 0,
+            x => 0,
         },
+        global_matching => 0,
     }, $class;
 }
 
@@ -31,8 +33,15 @@ sub add {
 
 sub regex {
     my $self = shift;
-    my $modifiers = join '', values %{$self->{modifiers}};
-    return qr/(?^$modifiers:$self->{s})/;
+    my $enabled = my $disabled = '';
+    for my $modifier (sort keys %{$self->{modifiers}}) {
+        if ($self->{modifiers}{$modifier}) {
+            $enabled .= $modifier;
+        } else {
+            $disabled .= $modifier;
+        }
+    }
+    return qr/(?$enabled-$disabled:$self->{s})/;
 }
 *compile = \&regex;
 
@@ -71,6 +80,16 @@ sub anything {
 sub anything_but {
     my ($self, $value) = @_;
     return $self->add('(?:[^' . quotemeta($value) . ']*)');
+}
+
+sub something {
+    my $self = shift;
+    return $self->add('(?:.+)');
+}
+
+sub something_but {
+    my ($self, $value) = @_;
+    return $self->add('(?:[^' . quotemeta($value) . ']+)');
 }
 
 sub line_break {
@@ -119,32 +138,44 @@ sub or {
 
 sub replace {
     my ($self, $source, $value) = @_;
-    if ($self->{modifiers}{g}) {
-        local $self->{modifiers}{g} = ''; # not include /g in pattern
-        my $re = $self->regex;
+    my $re = $self->regex;
+    if ($self->{global_matching}) {
         $source =~ s/$re/$value/g;
     } else {
-        my $re = $self->regex;
         $source =~ s/$re/$value/;
     }
     return $source;
 }
 
+sub _build_modifier {
+    my ($self, $modifier, $value) = @_;
+    if (!defined $value) {
+        # XXX verex->with_any_case;
+        $self->{modifiers}{$modifier} = 1;
+    } else {
+        $self->{modifiers}{$modifier} = $value ? 1 : 0;
+    }
+}
+
 sub with_any_case {
     my ($self, $value) = @_;
-    $self->{modifiers}{i} = $value ? 'i' : '';
+    $self->_build_modifier(i => $value);
     return $self;
 }
 
 sub stop_at_first {
     my ($self, $value) = @_;
-    $self->{modifiers}{g} = $value ? 'g' : '';
+    if (!defined $value) {
+        $self->{global_matching} = 1;
+    } else {
+        $self->{global_matching} = $value ? 1 : 0;
+    }
     return $self;
 }
 
 sub search_one_line {
     my ($self, $value) = @_;
-    $self->{modifiers}{m} = $value ? 'm' : '';
+    $self->_build_modifier(m => $value);
     return $self;
 }
 

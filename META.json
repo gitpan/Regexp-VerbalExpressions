@@ -40,6 +40,7 @@
       },
       "runtime" : {
          "requires" : {
+            "parent" : "0",
             "perl" : "5.008005"
          }
       },
@@ -52,7 +53,7 @@
    "provides" : {
       "Regexp::VerbalExpressions" : {
          "file" : "lib/Regexp/VerbalExpressions.pm",
-         "version" : "0.01"
+         "version" : "0.02"
       }
    },
    "release_status" : "stable",
@@ -66,5 +67,5 @@
          "web" : "https://github.com/VerbalExpressions/PerlVerbalExpressions"
       }
    },
-   "version" : "0.01"
+   "version" : "0.02"
 }
